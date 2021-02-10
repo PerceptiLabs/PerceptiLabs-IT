@@ -1,0 +1,44 @@
+{
+  "variables": {
+    "aws_profile": "{{env `AWS_PROFILE`}}",
+    "aws_mfa": "{{env `AWS_MFA`}}",
+    "db_url": "{{env `DB_URL`}}"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "mfa_code": "{{ user `aws_mfa`}}",
+      "profile": "{{ user `aws_profile`}}",
+      "region": "eu-west-1",
+      "source_ami": "ami-00b73b2150a3aa6bc",
+      "instance_type": "t3.xlarge",
+      "ssh_username": "ubuntu",
+      "ami_name": "discourse-{{isotime \"20060102-1504\"}}",
+      "vpc_id": "vpc-0a54db76a27aa0482",
+      "subnet_id": "subnet-078db29b70c39160d",
+      "launch_block_device_mappings": [
+        {
+          "device_name": "/dev/sda1",
+          "volume_size": 20,
+          "volume_type": "gp2",
+          "delete_on_termination": true
+        }
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "app.yml",
+      "destination": "/home/ubuntu/app.yml"
+    },
+    {
+      "type": "shell",
+      "script": "packer-provisioning-script.sh",
+      "environment_vars":
+        [ 
+          "DB_URL={{ user `db_url`}}"
+        ]
+    }
+  ]
+}
